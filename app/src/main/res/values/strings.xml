@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Fitness</string>
+    <string name="scan">Scan</string>
     <string name="ble_not_supported">Bluetooth LE is not supported on this device</string>
 </resources>

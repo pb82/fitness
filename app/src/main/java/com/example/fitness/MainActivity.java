@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -12,11 +13,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
 
 public class MainActivity extends Activity {
     private static int REQUEST_ENABLE_BT = 1;
@@ -26,6 +31,7 @@ public class MainActivity extends Activity {
     private DeviceListAdapter deviceAdapter;
     private BluetoothAdapter bluetoothAdapter;
     private Handler handler;
+    private Button scanButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,15 +44,21 @@ public class MainActivity extends Activity {
         }
 
         deviceList = findViewById(R.id.device_list);
+        scanButton = findViewById(R.id.scan_button);
         deviceList.setHasFixedSize(true);
 
         deviceListLayout = new LinearLayoutManager(this);
         deviceList.setLayoutManager(deviceListLayout);
 
+        final Activity that = this;
+
         deviceAdapter = new DeviceListAdapter(new DeviceListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(BluetoothDevice device) {
                 Log.d("FITNESS_SCAN", String.format("clicked on %s", device.getAddress()));
+                Intent intent = new Intent(that, WorkoutActivity.class);
+                intent.putExtra("device", device);
+                startActivity(intent);
             }
         });
         deviceList.setAdapter(deviceAdapter);
@@ -57,6 +69,13 @@ public class MainActivity extends Activity {
                 super.handleMessage(msg);
             }
         };
+
+        scanButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                scan(true);
+            }
+        });
 
         setupBluetooth();
     }
@@ -88,13 +107,15 @@ public class MainActivity extends Activity {
         };
 
         if (enabled) {
+            scanButton.setEnabled(false);
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     bluetoothAdapter.stopLeScan(callback);
                     Log.d("FITNESS_SCAN", "stop scan");
+                    scanButton.setEnabled(true);
                 }
-            }, 10000);
+            }, 20000);
 
             bluetoothAdapter.startLeScan(callback);
             Log.d("FITNESS_SCAN", "start scan");
